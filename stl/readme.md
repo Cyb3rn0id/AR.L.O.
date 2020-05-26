@@ -1,3 +1,5 @@
+PLEASE DON'T PRINT: maybe there are some errors. Wait a little.  
+
 STL files for 3D printing.  
 I've designed parts using [Tinkercad](https://www.tinkercad.com/).  
   
