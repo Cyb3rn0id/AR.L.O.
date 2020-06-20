@@ -70,7 +70,7 @@ uint8_t servoR_eeprom=2; // locazione di memoria in cui è contenuto il valore d
 #define SONAR_ECHO_INTERRUPT_ID 0 // ID interrupt su Arduino UNO
 #define TIMER_US 50 // interrupt timer ogni 50uS
 #define TICK_COUNTS 4000 // 4000*50uS = 200mS, distanza tra un pulse e il successivo
-#define OBSTACLE 12 // a 10 cm rallento e mi fermo
+#define OBSTACLE 13 // a 13 cm rallento e mi fermo
 
 // definizioni per display oled
 #define SCREEN_WIDTH 128
@@ -172,16 +172,16 @@ void loop()
     Serial.println("stop");
     // rampa di decelerazione
     dritto(SPEED-50);
-    delay(50);
+    delay(100);
     dritto(SPEED-100);
-    delay(50);
+    delay(100);
     dritto(SPEED-150);
-    delay(50);
+    delay(100);
     // stop
     fermo(100);
     indietro(1000);
     fermo(100);
-    if (random)
+    if (randomNum)
         {
         destra(1000);
         }
