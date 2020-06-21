@@ -1,93 +1,120 @@
 /*
  * ARLO
- * Robot Educativo basato su Arduino UNO
+ * ARduino Loaded with Orings!
+ * Educational Robot based on Arduino UNO
  * (c)2020 Giovanni Bernardo (https://www.settorezero.com)
  * 
- * progetto distribuito con licenza CC-BY-SA- NC 4.0
  * https://www.github.com/CyB3rn0id/arlo
+ * https://www.settorezero.com/wordpress/arlo
  * 
+ * LICENSE
+ * Attribution-NonCommercial-ShareAlike 4.0 International 
+ * (CC BY-NC-SA 4.0)
  * 
+ * This is a human-readable summary of (and not a substitute for) the license:
+ * You are free to:
+ * 
+ * SHARE - copy and redistribute the material in any medium or format
+ * ADAPT -  remix, transform, and build upon the material
+ * The licensor cannot revoke these freedoms as long as you follow the license terms.
+ * Under the following terms:
+ * ATTRIBUTION -  You must give appropriate credit, provide a link to the license, 
+ * and indicate if changes were made. You may do so in any reasonable manner, 
+ * but not in any way that suggests the licensor endorses you or your use.
+ * NON COMMERCIAL -  You may not use the material for commercial purposes.
+ * SHARE ALIKE -  If you remix, transform, or build upon the material,
+ * you must distribute your contributions under the same license as the original.
+ * NO ADDITIONAL RESTRICTIONS - You may not apply legal terms or technological 
+ * measures that legally restrict others from doing anything the license permits.
+ * 
+ * Warranties
+ * The Licensor offers the Licensed Material as-is and as-available, and makes
+ * no representations or warranties of any kind concerning the Licensed Material, 
+ * whether express, implied, statutory, or other. This includes, without limitation, 
+ * warranties of title, merchantability, fitness for a particular purpose, 
+ * non-infringement, absence of latent or other defects, accuracy, or the presence
+ * or absence of errors, whether or not known or discoverable. Where disclaimers 
+ * of warranties are not allowed in full or in part, this disclaimer may not apply to You.
+ * 
+ * Please read the Full License text at the following link:
+ * https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+ *  
  * CREDITS
  * 
  * Steve Garrat
- * Per l'idea dell'utilizzo del sonar HC-SR04 tramite interrupt
+ * For the idea about using HC-SR04 sonar on interrupts:
  * (https://homediyelectronics.com/projects/arduino/arduinoprogramminghcsr04withinterrupts/)
- * Il segnale di pulse viene schedulato mediante l'interrupt generato dal Timer 1
- * sfruttando una libreria apposita chiamata TimerOne scaricabile da:
- * https://github.com/PaulStoffregen/TimerOne
- * Si ha un interrupt del Timer1 ogni 50uS, per cui la durata del segnale di pulse è
- * pari a 50uS (sono necessari minimo 10uS per l'HC-SR04) e contemporaneamente si ha
- * conteggio che arriva fino a 200mS: arrivati a 200mS si invia un nuovo segnale e
- * così via, per cui la distanza tra un pulse e l'altro è di 200mS
- * La durata del segnale di echo viene misurata mediante la valutazione della distanza
- * di tempo che intercorre tra due interrupt generati dal cambio di stato
  * 
  * Nick Bontranger
- * Per la libreria che permette di pilotare i servo mediante il Timer 2
+ * For the library allows using servo on Timer 2
  * https://github.com/nabontra/ServoTimer2
- * questa libreria accetta il pilotaggio dei servo passando la durata dell'impulso di pilotaggio
- * piuttosto che l'angolazione come fa la libreria standard di Arduino.
- * Utilizzando servo modificati per la rotazione continua è controproducente utilizzare il valore
- * di angolo. Inoltre usando il Timer2 è possibile liberare il Timer1 (utilizzato per la libreria 
- * standard Servo) ed utilizzarlo per la generazione di interrupt
  * 
  * Adafruit
- * Perchè produce continuamente librerie per Arduino, e qui utilizziamo la loro per pilotare
- * un display OLED I2C 128x32
+ * Because makes a lot of useful libraries
+ * 
+ * LIBRARIES TO BE INSTALLED
+ * 
+ * - Adafruit SSD1306 by Adafruit
+ * - Adafruit GFX by Adafruit
+ * - TimerOne by Jesse Tane, Jérôme Despatis, Michael Polli, Dan Clemens, Paul Stoffregen
+ * 
+ * This one requires manual installation (copy the folder in Documents\Arduino\Libraries)
+ * https://github.com/nabontra/ServoTimer2
+ * 
  */
 
-// librerie utilizzate dal display oled
+// Libraries for OLED display
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-// Libreria per sfruttare l'interrupt sul Timer 1
+// Library for Timer1 Interrupts
 #include <TimerOne.h>
-// Libreria per utilizzare i servo con il Timer 2
+// Library for using servo on Timer 2
 #include <ServoTimer2.h>
-// Libreria per utilizzare la memoria EEprom interna dell'ATmega328
+// Library for Arduino internal eeprom memory
 #include <EEPROM.h>
 
-// utilizzo pins
-#define MotorRPin 9       // servocomando destro
-#define MotorLPin 10      // servocomando sinitro
-#define P1 6              // pulsante 1
-#define P2 7              // pulsante 2
-#define trigPin 8         // sonar, pin di trigger
-#define echoPin 2         // sonar, pin di echo
+// Arduino used pins
+#define MotorRPin 9       // signal for right servomotor
+#define MotorLPin 10      // signal for left servomotor
+#define P1 6              // pushbutton P1
+#define P2 7              // pushbutton P2
+#define trigPin 8         // HC-SR04 - trigger
+#define echoPin 2         // HC-SR04 - echo
 
-// definizioni usate dai servocomandi
-ServoTimer2 MotorL;       // oggetto motore sinistro
-ServoTimer2 MotorR;       // offetto motore destro
-uint16_t servoL_center=1500; // valore default centro per servo sinistro
-uint16_t servoR_center=1500; // valore default centro per servo destro
-uint8_t servoL_eeprom=0; // locazione di memoria in cui è contenuto il valore di centro del servo sinistro
-uint8_t servoR_eeprom=2; // locazione di memoria in cui è contenuto il valore di centro del servo destro
-#define SPEED  200 // velocità normale, in avanti
-#define SPEED_SLOW 50 // velocità usata per le manovre
+// stuff used by servomotors
+ServoTimer2 MotorL;       // left servomotor object
+ServoTimer2 MotorR;       // right servomotor object
+uint16_t servoL_center=1500; // default value for left servomotor center point
+uint16_t servoR_center=1500; // default value for right servomotor center point
+uint8_t servoL_eeprom=0; // eeprom memory location for storing point zero of left servomotor
+uint8_t servoR_eeprom=2; // eeprom memory location for storing point zero of right servomotor
+#define SPEED  200 // normal speed for forward moving (center point+speed microseconds)
+#define SPEED_SLOW 50 // speed used for maneuvers
 
-// definizioni usate dal sonar
-#define SONAR_ECHO_INTERRUPT_ID 0 // ID interrupt su Arduino UNO
-#define TIMER_US 50 // interrupt timer ogni 50uS
-#define TICK_COUNTS 4000 // 4000*50uS = 200mS, distanza tra un pulse e il successivo
-#define OBSTACLE 13 // a 13 cm rallento e mi fermo
+// stuff used by sonar
+#define SONAR_ECHO_INTERRUPT_ID 0 // Arduino UNO interrupt ID on echoPin (2)
+#define TIMER_US 50 // Timer1 interrupt every 50uS
+#define TICK_COUNTS 4500 // 4500*50uS = 225mS, time space between two consecutive trigger pulses
+#define OBSTACLE 16 // ARLO will stop if an obstacle is nearer than 16cm
 
-// definizioni per display oled
+// stuff used by oled display
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
 #define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// Variabili globali
-volatile long distance=0; // distanza rilevata dal sonar, espressa in cm
-// enumerazione usata per la modalità di funzionamento
+// Global variables
+volatile long distance=0; // distance measured by sonar, cm
+// enum used for ARLO working mode
 enum arlo_mode
   {
   configuration,
   normal  
   };
-arlo_mode mode=normal;// modalità funzionamento ARLO
-// enumerazione usata per le pagine del menu di configurazione
+arlo_mode mode=normal;// actual mode
+// enum used for config menu pages on display
 enum config_pages
   {
   left_motor=0,
@@ -97,13 +124,13 @@ enum config_pages
   
 void setup() 
   {
-  // setup sonar
+  // sonar setup
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  // setup servo
+  // servomotors setup
   MotorL.attach(MotorLPin);   
   MotorR.attach(MotorRPin);
-  // setup pulsanti
+  // pushbotton setup
   pinMode(P1,INPUT_PULLUP);
   pinMode(P2,INPUT_PULLUP);
 
@@ -113,9 +140,9 @@ void setup()
   attachInterrupt(SONAR_ECHO_INTERRUPT_ID, sonarEcho_ISR, CHANGE); // Attach interrupt to the sensor echo input
   
   delay(2000);
-  Serial.begin(9600);
+  Serial.begin(9600); // the HC-05 in normal mode (no AT) works ad 9600baud (38400 if in AT)
   
-  randomSeed(analogRead(6)); // inizializza il generatore di numeri casuali con un ingresso analogico disconnesso
+  randomSeed(analogRead(6)); // start-up random number generator using an unused analog input
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
@@ -128,40 +155,57 @@ void setup()
   display.setTextColor(SSD1306_WHITE,SSD1306_BLACK);
 
   Serial.println("ARLO Startup");
-  // valori di centro dei servocomandi, presi dall'eeprom
-  // impostati ai valori di default se l'eeprom contiene valori anomali
-  // o semplicemente non è mai stata inizializzata
+  
+  // center values used for servomotors, loaded from eeprom
+  // if in the eeprom are saved values out of the range 500-2500, 1500 will be used
+  // (this happens when eeprom memory was never used since contains 0xFFFF value)
   uint16_t LV=EEPROM.read(servoL_eeprom)<<8;
   LV|=EEPROM.read(servoL_eeprom+1);
   uint16_t RV=EEPROM.read(servoR_eeprom)<<8;
   RV|=EEPROM.read(servoR_eeprom+1);
   if (LV<2501 && LV>499) servoL_center=LV;
   if (RV<2501 && RV>499) servoR_center=RV;
-  Serial.print("Valore centrale sinistra: ");
-  Serial.println(LV);
-  Serial.print("Valore centrale destra: ");
-  Serial.println(RV);
 
-  // se all'avvio P1 risulta premuto, avvio la modalità setup
+  fermo(100);
+  
+  // if P1 is pressed during the setup function, I'll start the setup mode
   if (digitalRead(P1)==0) 
     {
       mode=configuration;
       while(digitalRead(P1)==0) {continue;}
-      Serial.println("Configurazione");
+      Serial.println("Setup mode");
     }
   }
 
 void loop()
   {
+  static boolean juststarted=true;
   while (mode==configuration) config_menu();
-  
+
   display.setTextSize(2);
   display.setCursor(0,0);
+  
+  if (juststarted)
+    {
+    fermo(100);
+    display.println("WAIT");
+    display.display(); 
+    fermo(2000); // servomotors stopped while sonar goes stable
+    juststarted=false;  
+    }
   display.println("ARLO RUN");
-  display.print(distance);
-  display.print("cm       ");
+  if (distance>3000)
+    {
+    display.print("go ahead!");
+    }
+  else
+    {
+    display.print(distance);
+    display.print("cm       ");
+    }
   display.display();  
 
+  // distance is greater than obstacle
   if(distance>OBSTACLE)
     {
     dritto(SPEED);
@@ -170,7 +214,7 @@ void loop()
     {
     uint8_t randomNum=random(0,1);
     Serial.println("stop");
-    // rampa di decelerazione
+    // deceleration
     dritto(SPEED-50);
     delay(100);
     dritto(SPEED-100);
@@ -212,12 +256,12 @@ void config_menu(void)
     }
   
   uint16_t val=analogRead(0);
-  // mappo 0-1023 a 500-2500
+  // mapping 0-1023 a 500-2500
   uint16_t pos=map(val, 0, 1023, 500, 2500);
   
   switch(actual_page)
     {
-    case left_motor: // setup motore sinistro
+    case left_motor: // left servomotor setup
       display.setCursor(0,0);
       display.setTextSize(1);
       display.print("LEFT MOTOR (");
@@ -233,7 +277,7 @@ void config_menu(void)
       MotorL.write(pos);
     break;
 
-    case right_motor: // setup motore destro
+    case right_motor: // right servomotor setup
       display.setCursor(0,0);
       display.setTextSize(1);
       display.print("RIGHT MOTOR (");
@@ -258,7 +302,7 @@ void config_menu(void)
       break;
     } // switch
 
-  // pulsante 1 premuto: conferma valore acquisito o uscita dal menù
+  // P1 pressed: confirm value or exit from menu
   if (digitalRead(P1)==0)
     {
     delay(50);
@@ -269,49 +313,49 @@ void config_menu(void)
         {
           case 0:
             servoL_center=pos;
-            // divido il valore a 16 bit in due bytes
-            // e li memorizzo in due locazioni di eeprom
+            // I must split the 16bit value in two bytes
+            // and save values in 2 different EEPROM locations
             EEPROM.update(servoL_eeprom, (uint8_t)(pos>>8));
             delay(4); // an eeprom.write takes 3.3mS
             EEPROM.update(servoL_eeprom+1, (uint8_t)(pos&0x00FF));
             delay(4);
-            Serial.print("Valore centrale sinistro: ");
+            Serial.print("Left zero: ");
             Serial.println(pos);
             break;
 
           case 1:
             servoR_center=pos;
-            // divido il valore a 16 bit in due bytes
-            // e li memorizzo in due locazioni di eeprom
+            // I must split the 16bit value in two bytes
+            // and save values in 2 different EEPROM locations
             EEPROM.update(servoR_eeprom, (uint8_t)(pos>>8));
-            delay(4);
+            delay(4); // an eeprom.write takes 3.3mS
             EEPROM.update(servoR_eeprom+1, (uint8_t)(pos&0x00FF));
             delay(4);
-            Serial.print("Valore centrale destro: ");
+            Serial.print("Right zero: ");
             Serial.println(pos);
             break;
 
           case 2:
-            // esco dalla configurazione
+            // exit from menu
             mode=normal;
             display.clearDisplay();
             display.display();
-            Serial.println("Uscita da configurazione");
+            Serial.println("Config exit");
             return;
             break;
         }
       }
     }
 
-  // pulsante 2 premuto: cicla la pagina
+  // P2 pressed: change the page
   if (digitalRead(P2)==0)
     {
     delay(50);
     if(digitalRead(P2)==0)
       {
       while(digitalRead(P2)==0) {continue;}
-      // dal momento che il C++ tratta le enumerazioni come un tipo a se stante
-      // bisogna convertirla in un intero per poter usare l'operatore ++
+      // the C++ deals with enums as an independent type
+      // so we must convert it in an integer if we want to use the ++ operator
       uint8_t tmp=(uint8_t)actual_page;
       tmp++;
       if (tmp>(uint8_t)config_end) tmp=0;
@@ -322,10 +366,10 @@ void config_menu(void)
       delay(10);
       }
     }
-  
   }
 
   
+// moves forward at 'vel' speed
 void dritto(uint16_t vel)
   {
   if (vel>SPEED) vel=SPEED;
@@ -333,6 +377,7 @@ void dritto(uint16_t vel)
   MotorR.write(servoR_center-vel);
   }
 
+// moves backward at slow speed for ms milliseconds
 void indietro(long ms)
   {
   long timenow=millis();
@@ -343,6 +388,7 @@ void indietro(long ms)
     }
   }
 
+// turns right at slow speed for ms milliseconds
 void destra(long ms)
   {
   long timenow=millis();
@@ -352,7 +398,8 @@ void destra(long ms)
     MotorR.write(servoR_center+SPEED_SLOW);
     }
   }
-  
+
+// turns left at slow speed for ms milliseconds
 void sinistra(long ms)
   {
   long timenow=millis();
@@ -363,6 +410,7 @@ void sinistra(long ms)
     }
   }
 
+// Servomotors stopped
 void fermo(long ms)
   {
   long timenow=millis();
@@ -373,56 +421,55 @@ void fermo(long ms)
     }
   }
   
-// Interrupt su Timer1 ogni 50uS : invio segnale di pulse
+// Timer1 every 50uS : sends the pulse signal
 void timer1_ISR()
   {
-  static volatile int state=0; // stato attuale dell'invio del pulse
-  static volatile int trigger_time_count=0; // countdown per reinvio trigger
+  static volatile int state=0; // actual state of pulse signal
+  static volatile int trigger_time_count=0; // countdown used to re-triggering
   
-  if (!(--trigger_time_count)) // conta fino ad arrivare a 200mS
+  if (!(--trigger_time_count)) // counting up to 225mS (defined by TICK_COUNTS)
     {
-    trigger_time_count=TICK_COUNTS; // ricarica il contatore
-    state=1; // possiamo inviare un nuovo segnale di pulse
+    trigger_time_count=TICK_COUNTS; // reload the counter
+    state=1; // we're ready to retrigger
     }
     
   switch(state)
     {
-    case 0: // non fa nulla: siamo in attesa che passino i 200mS di pausa
-            // tra un invio e il successivo
+    case 0: // does nothin: I'll wait the 225ms
       break;
 
-    case 1:  // bisogna inviare il segnale di pulse
-      digitalWrite(trigPin, HIGH);  // pin di trigger a livello alto: invio il segnale
-      state=2; // passiamo allo stato successivo
+    case 1:  // send the pulse signal
+      digitalWrite(trigPin, HIGH);  // trigger pin at high level
+      state=2; // go to the next step, see you in 50uS
       break;
         
-    case 2: // bisogna spegnere il segnale di pulse (ci ritroviamo qui al successivo interrupt dallo stato 1)
+    case 2: // stop the pulse signal
     default:      
-      digitalWrite(trigPin, LOW); // spengo il segnale di pulse
-      state=0; // ritorno a fare nulla, ricominceremo tutto tra 200mS
+      digitalWrite(trigPin, LOW); // trigger pin at low level
+      state=0; // do nothing, see you in 225mS
       break;
     }
   }
 
-// routine di interrupt sul cambio di stato del pin collegato all'echo
+// interrupt on state change of echo pin
 void sonarEcho_ISR()
   {
-  static long echo_start=0; // salva il tempo in cui il segnale di echo è partito
-  static long echo_end=0; // salva il tempo in cui il segnale di echo è terminato
-  long echo_duration=0; // durata dell'echo espressa in microsecondi
-  switch (digitalRead(echoPin)) // controlliamo se il pin di pulse è a livello alto o basso
+  static long echo_start=0; // time at which echo high pulse is arrived
+  static long echo_end=0; // time at which echo low pulse is arrived
+  long echo_duration=0; // echo lasting in microseconds
+  switch (digitalRead(echoPin)) // check echo pin if is high or low
     {
-    case HIGH: // il segnale di pulse è appena arrivato
+    case HIGH: // echo is just started
       echo_end=0;
-      echo_start=micros(); // tempo di inizio
+      echo_start=micros(); // save starting time
       break;
       
-    case LOW: // il segnale di pulse è terminato
-      echo_end=micros(); // tempo di fine
-      if (echo_end>echo_start) // mi assicuro che non ci sia stato un overflow di micros()
+    case LOW: // echo is finished
+      echo_end=micros(); // save ending time
+      if (echo_end>echo_start) // I check that there is no micros() overflow
         {
-        echo_duration=echo_end-echo_start; // durata del segnale di echo, in microsecondi
-        distance=echo_duration/58; // distanza espressa in centimetri
+        echo_duration=echo_end-echo_start; // decho lasting, in microseconds
+        distance=echo_duration/58; // distance in cm, global variable
         }
       break;
     }
