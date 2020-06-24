@@ -142,7 +142,7 @@ void setup()
   delay(2000);
   Serial.begin(9600); // the HC-05 in normal mode (no AT) works ad 9600baud (38400 if in AT)
   
-  randomSeed(analogRead(6)); // start-up random number generator using an unused analog input
+  randomSeed(analogRead(3)); // start-up random number generator using an unused analog input
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) 
