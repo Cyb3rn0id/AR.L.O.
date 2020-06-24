@@ -2,8 +2,8 @@
 
 ![ARLO - Arduino 3D printed Robot](img/ARLO_Arduino_Robot.jpg)  
 
-# ARLO
-ARLO Stands for ARduino Loaded with O-rings! It's an Arduino-based robot with a chassis printed in 3D. It features an ultrasonic range finder SR-HC04, an 0.91" OLED display, an HC-05 Bluetooth Module and two modified Servos for moving around.  
+# AR.L.O.
+AR.L.O. Stands for ARduino Loaded with O-rings! It's an Arduino-based robot with a chassis printed in 3D. It features an ultrasonic range finder SR-HC04, an 0.91" OLED display, an HC-05 Bluetooth Module and two modified Servos for moving around.  
 I provided full-assembly instructions on my blog (see link at the end of this readme). Here you can find the STL to be printed and a source code.  
 Source code uses interrupts for make robot movement more efficient
 
