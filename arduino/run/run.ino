@@ -1,10 +1,10 @@
 /*
- * ARLO
+ * AR.L.O.
  * ARduino Loaded with Orings!
  * Educational Robot based on Arduino UNO
  * (c)2020 Giovanni Bernardo (https://www.settorezero.com)
  * 
- * https://www.github.com/CyB3rn0id/arlo
+ * https://www.github.com/CyB3rn0id/ar.l.o.
  * https://www.settorezero.com/wordpress/arlo
  * 
  * LICENSE
