@@ -7,6 +7,10 @@
  * https://www.github.com/CyB3rn0id/ar.l.o.
  * https://www.settorezero.com/wordpress/arlo
  * 
+ * WARNING
+ * This example will not work on Arduino LEONARDO
+ * since it hasn't the Timer2
+ *
  * LICENSE
  * Attribution-NonCommercial-ShareAlike 4.0 International 
  * (CC BY-NC-SA 4.0)
