@@ -13,6 +13,7 @@ You can support my works making AR.L.O. PCBs on PCBWay:
 
 ### Links
 - [Instructions](https://www.settorezero.com/wordpress/arlo)
+- [Where to buy components](https://docs.google.com/spreadsheets/d/1MPQHllO7yKMDYPbDrZOl-8qmw7OP9y3tJf0Bnw-yMyg/)
 - [Video showing AR.L.O. setup](https://youtu.be/i7roltk-IzI)
 - [AR.L.O. parts on Thingiverse](https://www.thingiverse.com/thing:4484651)
 - [Servo Wheel by Obijuan](https://www.thingiverse.com/thing:19940)
