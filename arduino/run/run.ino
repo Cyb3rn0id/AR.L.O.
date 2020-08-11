@@ -98,10 +98,9 @@ uint8_t servoR_eeprom=2; // eeprom memory location for storing point zero of rig
 #define SPEED_SLOW 50 // speed used for maneuvers
 
 // stuff used by sonar
-#define SONAR_ECHO_INTERRUPT_ID 0 // Arduino UNO interrupt ID on echoPin (2)
 #define TIMER_US 50 // Timer1 interrupt every 50uS
 #define TICK_COUNTS 4500 // 4500*50uS = 225mS, time space between two consecutive trigger pulses
-#define OBSTACLE 16 // ARLO will stop if an obstacle is nearer than 16cm
+#define OBSTACLE 16 // AR.L.O. will stop if an obstacle is nearer than 16cm
 
 // stuff used by oled display
 #define SCREEN_WIDTH 128
@@ -111,7 +110,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Global variables
 volatile long distance=0; // distance measured by sonar, cm
-// enum used for ARLO working mode
+// enum used for AR.L.O. working mode
 enum arlo_mode
   {
   configuration,
@@ -134,14 +133,14 @@ void setup()
   // servomotors setup
   MotorL.attach(MotorLPin);   
   MotorR.attach(MotorRPin);
-  // pushbotton setup
+  // pushbuttons setup
   pinMode(P1,INPUT_PULLUP);
   pinMode(P2,INPUT_PULLUP);
 
   // interrupts
   Timer1.initialize(TIMER_US); // Initialise timer 1
   Timer1.attachInterrupt(timer1_ISR); // Attach interrupt to the timer service routine 
-  attachInterrupt(SONAR_ECHO_INTERRUPT_ID, sonarEcho_ISR, CHANGE); // Attach interrupt to the sensor echo input
+  attachInterrupt(digitalPinToInterrupt(echoPin), sonarEcho_ISR, CHANGE); // Attach interrupt to the sensor echo input
   
   delay(2000);
   Serial.begin(9600); // the HC-05 in normal mode (no AT) works ad 9600baud (38400 if in AT)
