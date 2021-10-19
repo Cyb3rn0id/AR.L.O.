@@ -1,3 +1,5 @@
+This Repository is Archived since has been Replaced by the updated project [ARLOK](https://www.github.com/settorezero/arlok)
+
 [![GitHub license](https://img.shields.io/badge/License-CC%20BY--SA--NC%204.0-blue)](LICENSE)  
 
 ![ARLO - Arduino 3D printed Robot](img/ARLO_Arduino_Robot.jpg)  
